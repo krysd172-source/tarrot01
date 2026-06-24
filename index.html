@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✨ タロット占い</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Shippori+Mincho:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F0EBF8;
+    --bg2: #FAF3F8;
+    --card-back: linear-gradient(135deg, #C8A8DC 0%, #A8C4DC 50%, #DCA8C8 100%);
+    --accent: #B094C8;
+    --accent2: #D4A8C0;
+    --accent3: #94B8D4;
+    --text: #5A4870;
+    --text-light: #9880B0;
+    --text-muted: #B8A8C8;
+    --card-bg: #FFFFFF;
+    --shadow: 0 4px 20px rgba(160,120,200,0.15);
+    --shadow-hover: 0 8px 32px rgba(160,120,200,0.28);
+    --radius: 16px;
+    --card-radius: 14px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Zen Maru Gothic', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+
+  /* ===== HEADER ===== */
+  header {
+    text-align: center;
+    padding: 32px 20px 20px;
+    background: linear-gradient(180deg, #E8DCFA 0%, transparent 100%);
+  }
+  header h1 {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 26px;
+    color: var(--text);
+    letter-spacing: 0.12em;
+    margin-bottom: 4px;
+  }
+  header p {
+    font-size: 12px;
+    color: var(--text-light);
+    letter-spacing: 0.08em;
+  }
+  .stars {
+    font-size: 18px;
+    letter-spacing: 6px;
+    margin-bottom: 8px;
+    opacity: 0.7;
+  }
+
+  /* ===== SCREENS ===== */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ===== SELECT SCREEN ===== */
+  .section-title {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 13px;
+    color: var(--text-light);
+    letter-spacing: 0.15em;
+    text-align: center;
+    margin: 24px 0 16px;
+  }
+
+  .spread-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    padding: 0 18px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  .spread-grid .span-full {
+    grid-column: 1 / -1;
+  }
+
+  .spread-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 16px 14px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    border: 2px solid transparent;
+    position: relative;
+    overflow: hidden;
+  }
+  .spread-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+  .spread-card:active, .spread-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+    border-color: #D8C0EC;
+  }
+  .spread-card:active::before, .spread-card:hover::before { opacity: 1; }
+
+  .spread-name {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+  }
+  .spread-icon { font-size: 18px; flex-shrink: 0; }
+  .spread-count {
+    display: inline-block;
+    font-size: 10px;
+    background: linear-gradient(135deg, #E0D0F0, #F0D0E8);
+    color: var(--accent);
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+  .spread-desc {
+    font-size: 11px;
+    color: var(--text-light);
+    line-height: 1.7;
+    letter-spacing: 0.03em;
+  }
+
+  /* ===== QUESTION INPUT ===== */
+  .question-area {
+    padding: 0 18px;
+    max-width: 480px;
+    margin: 0 auto 4px;
+  }
+  .question-label {
+    font-size: 12px;
+    color: var(--text-light);
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .question-input {
+    width: 100%;
+    border: 2px solid #E0D0F0;
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: white;
+    outline: none;
+    transition: border-color 0.2s;
+    resize: none;
+  }
+  .question-input:focus { border-color: var(--accent); }
+  .question-input::placeholder { color: var(--text-muted); }
+
+  /* ===== DRAW SCREEN ===== */
+  #drawScreen {
+    padding: 0 18px;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+  .draw-header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .draw-header h2 {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 18px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .draw-header p { font-size: 12px; color: var(--text-light); }
+
+  .cards-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  /* Tarot card flip */
+  .tarot-card-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-position-label {
+    font-size: 11px;
+    color: var(--text-light);
+    letter-spacing: 0.08em;
+    text-align: center;
+    line-height: 1.4;
+    min-height: 30px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .tarot-card {
+    width: 80px;
+    height: 130px;
+    perspective: 600px;
+    cursor: pointer;
+  }
+  .tarot-card.flipped .card-inner { transform: rotateY(180deg); }
+  .card-inner {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .card-face, .card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--card-radius);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .card-back {
+    background: var(--card-back);
+    box-shadow: 0 4px 16px rgba(160,120,200,0.3);
+    border: 2px solid rgba(255,255,255,0.4);
+  }
+  .card-back-pattern {
+    font-size: 28px;
+    opacity: 0.6;
+  }
+  .card-face {
+    background: white;
+    transform: rotateY(180deg);
+    box-shadow: 0 4px 16px rgba(160,120,200,0.2);
+    border: 2px solid #ECD8F4;
+    flex-direction: column;
+    padding: 6px 4px;
+    text-align: center;
+  }
+  .card-face-emoji { font-size: 20px; margin-bottom: 4px; }
+  .card-face-name {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 9.5px;
+    color: var(--text);
+    line-height: 1.4;
+    letter-spacing: 0.02em;
+    word-break: break-all;
+  }
+  .card-face-position {
+    font-size: 8.5px;
+    color: var(--accent2);
+    margin-top: 3px;
+    letter-spacing: 0.05em;
+  }
+  .card-hint {
+    font-size: 9px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    letter-spacing: 0.03em;
+  }
+
+  /* ===== RESULT SCREEN ===== */
+  #resultScreen {
+    padding: 0 18px;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+  .result-header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .result-header h2 {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 18px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .result-card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+    border-left: 4px solid transparent;
+  }
+  .result-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .result-position {
+    font-size: 11px;
+    color: var(--text-light);
+    letter-spacing: 0.1em;
+  }
+  .result-card-name {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .result-card-emoji { font-size: 28px; }
+
+  /* AI text box */
+  .ai-text-box {
+    background: linear-gradient(135deg, #F5F0FC, #FCF0F6);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin: 20px 0;
+    border: 1.5px solid #E8D8F4;
+  }
+  .ai-text-label {
+    font-size: 11px;
+    color: var(--text-light);
+    letter-spacing: 0.12em;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ai-text-content {
+    font-size: 13px;
+    line-height: 1.9;
+    color: var(--text);
+    letter-spacing: 0.04em;
+    white-space: pre-wrap;
+    background: white;
+    border-radius: 10px;
+    padding: 12px 14px;
+    border: 1px solid #ECD8F4;
+  }
+  .copy-btn {
+    width: 100%;
+    margin-top: 10px;
+    padding: 12px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    letter-spacing: 0.08em;
+    transition: all 0.2s;
+    box-shadow: 0 3px 12px rgba(176,148,200,0.4);
+  }
+  .copy-btn:active { transform: scale(0.97); }
+
+  /* ===== BUTTONS ===== */
+  .btn-primary {
+    display: block;
+    width: calc(100% - 36px);
+    max-width: 480px;
+    margin: 18px auto 0;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    box-shadow: 0 4px 16px rgba(176,148,200,0.4);
+    transition: all 0.2s;
+  }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.5; cursor: default; }
+
+  .btn-ghost {
+    display: block;
+    width: calc(100% - 36px);
+    max-width: 480px;
+    margin: 10px auto 0;
+    padding: 12px;
+    background: transparent;
+    color: var(--text-light);
+    border: 1.5px solid #DDD0EC;
+    border-radius: 14px;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    letter-spacing: 0.08em;
+    transition: all 0.2s;
+  }
+  .btn-ghost:active { background: rgba(200,180,220,0.1); }
+
+  /* ===== MISC ===== */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #DDD0EC, transparent);
+    margin: 8px 0;
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fade-in { animation: fadeInUp 0.4s ease forwards; }
+
+  /* Celtic cross specific layout */
+  .celtic-layout {
+    position: relative;
+    width: 280px;
+    height: 320px;
+    margin: 0 auto 16px;
+  }
+
+  /* ===== PROGRESS ===== */
+  .progress-text {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-light);
+    margin-bottom: 12px;
+    letter-spacing: 0.05em;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="stars">✦ ✧ ✦</div>
+  <h1>✨ タロット占い</h1>
+  <p>カードがあなたへのメッセージを届けます</p>
+</header>
+
+<!-- SELECT SCREEN -->
+<div id="selectScreen" class="screen active">
+  <div class="question-area">
+    <label class="question-label">✦ 相談したいことを書いてください（任意）</label>
+    <textarea class="question-input" id="questionInput" rows="2" placeholder="例：仕事のことで迷っています…"></textarea>
+  </div>
+
+  <p class="section-title">— 占い方を選んでください —</p>
+
+  <div class="spread-grid">
+    <div class="spread-card" onclick="selectSpread('one')">
+      <div class="spread-name"><span class="spread-icon">🔮</span>ワンオラクル</div>
+      <span class="spread-count">1枚</span>
+      <div class="spread-desc">1枚のカードで、今の状況やアドバイスをシンプルに読み取ります。迷いがある時や日々のメッセージを受け取りたい時に。</div>
+    </div>
+
+    <div class="spread-card" onclick="selectSpread('three')">
+      <div class="spread-name"><span class="spread-icon">🌙</span>スリーカード</div>
+      <span class="spread-count">3枚</span>
+      <div class="spread-desc">過去・現在・未来の流れを読み取ります。物事の経緯と今後の方向性をバランスよく知りたい時に。</div>
+    </div>
+
+    <div class="spread-card" onclick="selectSpread('choice')">
+      <div class="spread-name"><span class="spread-icon">⚖️</span>二者択一</div>
+      <span class="spread-count">5枚</span>
+      <div class="spread-desc">AかBか迷う時に。それぞれの選択肢の過去・現在・未来と総合アドバイスを読み取ります。</div>
+    </div>
+
+    <div class="spread-card" onclick="selectSpread('greek')">
+      <div class="spread-name"><span class="spread-icon">✚</span>ギリシャ十字</div>
+      <span class="spread-count">5枚</span>
+      <div class="spread-desc">上下左右と中心の5枚で読む十字形のスプレッド。状況の全体像と障害・可能性を多角的に分析します。</div>
+    </div>
+
+    <div class="spread-card span-full" onclick="selectSpread('celtic')">
+      <div class="spread-name"><span class="spread-icon">🍀</span>ケルト十字</div>
+      <span class="spread-count">10枚</span>
+      <div class="spread-desc">最も詳細なスプレッドのひとつ。現状・障害・過去・未来・深層心理・外部の影響・希望・最終結果まで、深く多面的に読み解きます。</div>
+    </div>
+  </div>
+</div>
+
+<!-- DRAW SCREEN -->
+<div id="drawScreen" class="screen">
+  <div class="draw-header">
+    <h2 id="drawTitle">カードを引いてください</h2>
+    <p id="drawSubtitle">カードをタップして、めくってください</p>
+  </div>
+  <p class="progress-text" id="progressText"></p>
+  <div class="cards-row" id="cardsRow"></div>
+  <button class="btn-primary" id="drawResultBtn" onclick="showResult()" disabled>結果を見る ✨</button>
+  <button class="btn-ghost" onclick="goBack()">← 占い方を選び直す</button>
+</div>
+
+<!-- RESULT SCREEN -->
+<div id="resultScreen" class="screen">
+  <div class="result-header">
+    <h2 id="resultTitle">結果</h2>
+    <p id="resultQuestion" style="font-size:12px;color:var(--text-light);margin-top:4px;"></p>
+  </div>
+  <div id="resultCards"></div>
+  <div class="ai-text-box">
+    <div class="ai-text-label">🤖 AIに読み込ませる用テキスト</div>
+    <div class="ai-text-content" id="aiText"></div>
+    <button class="copy-btn" onclick="copyAiText()">📋 テキストをコピーする</button>
+  </div>
+  <button class="btn-ghost" onclick="resetApp()">🔮 もう一度占う</button>
+</div>
+
+<script>
+// ============================
+// TAROT DATA
+// ============================
+const MAJOR = [
+  {name:"愚者", emoji:"🃏"}, {name:"魔術師", emoji:"✨"}, {name:"女教皇", emoji:"🌙"},
+  {name:"女帝", emoji:"👑"}, {name:"皇帝", emoji:"🏛️"}, {name:"法王", emoji:"⛪"},
+  {name:"恋人", emoji:"💕"}, {name:"戦車", emoji:"🏇"}, {name:"力", emoji:"🦁"},
+  {name:"隠者", emoji:"🕯️"}, {name:"運命の輪", emoji:"☸️"}, {name:"正義", emoji:"⚖️"},
+  {name:"吊られた男", emoji:"🙃"}, {name:"死神", emoji:"💀"}, {name:"節制", emoji:"🌊"},
+  {name:"悪魔", emoji:"😈"}, {name:"塔", emoji:"🗼"}, {name:"星", emoji:"⭐"},
+  {name:"月", emoji:"🌕"}, {name:"太陽", emoji:"☀️"}, {name:"審判", emoji:"📯"},
+  {name:"世界", emoji:"🌍"}
+];
+
+const SUITS = [
+  {name:"ワンド", emoji:"🌳"},
+  {name:"カップ", emoji:"🍷"},
+  {name:"ソード", emoji:"🗡️"},
+  {name:"ペンタクル", emoji:"🌟"}
+];
+const NUMBERS = ["エース","2","3","4","5","6","7","8","9","10","ペイジ","ナイト","クイーン","キング"];
+
+// Generate full 78-card deck
+function buildDeck() {
+  const deck = [];
+  MAJOR.forEach((m, i) => {
+    deck.push({name: (i===0?"":"") + m.name, emoji: m.emoji, type:"major"});
+  });
+  SUITS.forEach(s => {
+    NUMBERS.forEach(n => {
+      deck.push({name: s.name + " " + n, emoji: s.emoji, type:"minor", suit: s.name});
+    });
+  });
+  return deck;
+}
+
+function drawCards(n) {
+  const deck = buildDeck();
+  const drawn = [];
+  const used = new Set();
+  while(drawn.length < n) {
+    const idx = Math.floor(Math.random() * deck.length);
+    if(!used.has(idx)) {
+      used.add(idx);
+      const card = {...deck[idx]};
+      card.reversed = Math.random() < 0.5;
+      drawn.push(card);
+    }
+  }
+  return drawn;
+}
+
+// ============================
+// SPREAD CONFIGS
+// ============================
+const SPREADS = {
+  one: {
+    label:"ワンオラクル", count:1,
+    positions:["メッセージ"]
+  },
+  three: {
+    label:"スリーカード", count:3,
+    positions:["過去", "現在", "未来"]
+  },
+  choice: {
+    label:"二者択一", count:5,
+    positions:["選択肢 A（現在）", "選択肢 A（未来）", "選択肢 B（現在）", "選択肢 B（未来）", "総合アドバイス"]
+  },
+  greek: {
+    label:"ギリシャ十字", count:5,
+    positions:["現在の状況（中心）", "上（意識・理想）", "下（潜在意識）", "左（過去）", "右（未来）"]
+  },
+  celtic: {
+    label:"ケルト十字", count:10,
+    positions:[
+      "現在の状況",
+      "交差するもの（障害・助力）",
+      "遠い過去（基盤）",
+      "近い過去",
+      "潜在意識・深層心理",
+      "近い未来",
+      "あなた自身の見方",
+      "外部の影響・環境",
+      "希望と恐れ",
+      "最終的な結果"
+    ]
+  }
+};
+
+// ============================
+// APP STATE
+// ============================
+let currentSpread = null;
+let drawnCards = [];
+let flippedCount = 0;
+
+// ============================
+// NAVIGATION
+// ============================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function goBack() { showScreen('selectScreen'); }
+
+function resetApp() {
+  currentSpread = null;
+  drawnCards = [];
+  flippedCount = 0;
+  document.getElementById('questionInput').value = '';
+  showScreen('selectScreen');
+}
+
+// ============================
+// SELECT SPREAD
+// ============================
+function selectSpread(key) {
+  currentSpread = key;
+  const spread = SPREADS[key];
+  drawnCards = drawCards(spread.count);
+  flippedCount = 0;
+
+  document.getElementById('drawTitle').textContent = spread.label;
+  document.getElementById('drawSubtitle').textContent = "カードをタップして、めくってください ✨";
+  document.getElementById('drawResultBtn').disabled = true;
+  updateProgress();
+
+  renderCards();
+  showScreen('drawScreen');
+}
+
+function updateProgress() {
+  const spread = SPREADS[currentSpread];
+  document.getElementById('progressText').textContent =
+    `${flippedCount} / ${spread.count} 枚めくりました`;
+}
+
+// ============================
+// RENDER CARDS
+// ============================
+function renderCards() {
+  const spread = SPREADS[currentSpread];
+  const row = document.getElementById('cardsRow');
+  row.innerHTML = '';
+
+  drawnCards.forEach((card, i) => {
+    const pos = spread.positions[i];
+    const wrap = document.createElement('div');
+    wrap.className = 'tarot-card-wrap fade-in';
+    wrap.style.animationDelay = (i * 0.08) + 's';
+
+    wrap.innerHTML = `
+      <div class="card-position-label">${pos}</div>
+      <div class="tarot-card" id="card${i}" onclick="flipCard(${i})">
+        <div class="card-inner">
+          <div class="card-back">
+            <div class="card-back-pattern">🌟</div>
+          </div>
+          <div class="card-face">
+            <div class="card-face-emoji">${card.emoji}</div>
+            <div class="card-face-name">${card.name}</div>
+            <div class="card-face-position">${card.reversed ? '逆位置' : '正位置'}</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-hint" id="hint${i}">タップ</div>
+    `;
+    row.appendChild(wrap);
+  });
+}
+
+function flipCard(i) {
+  const el = document.getElementById('card' + i);
+  if(el.classList.contains('flipped')) return;
+  el.classList.add('flipped');
+  document.getElementById('hint' + i).textContent = '';
+  flippedCount++;
+  updateProgress();
+
+  const spread = SPREADS[currentSpread];
+  if(flippedCount === spread.count) {
+    document.getElementById('drawResultBtn').disabled = false;
+    document.getElementById('drawSubtitle').textContent = "すべてめくりました！結果を確認しましょう ✨";
+  }
+}
+
+// ============================
+// SHOW RESULT
+// ============================
+function showResult() {
+  const spread = SPREADS[currentSpread];
+  const question = document.getElementById('questionInput').value.trim();
+
+  document.getElementById('resultTitle').textContent = spread.label + ' の結果';
+  document.getElementById('resultQuestion').textContent = question ? `「${question}」` : '';
+
+  // Color accent per position
+  const colors = ['#C8A8DC','#DCB8C8','#A8C4DC','#C8DCA8','#DCC8A8','#A8DCCC','#DCA8C8','#B8A8DC','#DCD8A8','#A8B8DC'];
+
+  const rc = document.getElementById('resultCards');
+  rc.innerHTML = '';
+
+  drawnCards.forEach((card, i) => {
+    const pos = spread.positions[i];
+    const div = document.createElement('div');
+    div.className = 'result-card fade-in';
+    div.style.borderLeftColor = colors[i % colors.length];
+    div.style.animationDelay = (i * 0.1) + 's';
+    div.innerHTML = `
+      <div class="result-card-header">
+        <div class="result-card-emoji">${card.emoji}</div>
+        <div>
+          <div class="result-position">${pos}</div>
+          <div class="result-card-name">${card.emoji} ${card.name} ${card.reversed ? '🔄逆位置' : '✅正位置'}</div>
+        </div>
+      </div>
+    `;
+    rc.appendChild(div);
+  });
+
+  // Build AI text
+  const aiLines = [];
+  aiLines.push(`【タロット占い結果】`);
+  if(question) aiLines.push(`相談内容：${question}`);
+  aiLines.push(`占い方：${spread.label}`);
+  aiLines.push('');
+  aiLines.push('引いたカード：');
+  drawnCards.forEach((card, i) => {
+    const pos = spread.positions[i];
+    aiLines.push(`・${pos}：${card.emoji} ${card.name}（${card.reversed ? '逆位置' : '正位置'}）`);
+  });
+  aiLines.push('');
+  aiLines.push('以上のカードをもとに、それぞれのカードの意味と全体的なメッセージを読み解いてください。');
+  if(question) aiLines.push(`特に「${question}」という相談に沿った解釈をお願いします。`);
+
+  document.getElementById('aiText').textContent = aiLines.join('\n');
+  showScreen('resultScreen');
+}
+
+function copyAiText() {
+  const text = document.getElementById('aiText').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✅ コピーしました！';
+    setTimeout(() => { btn.textContent = '📋 テキストをコピーする'; }, 2000);
+  }).catch(() => {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✅ コピーしました！';
+    setTimeout(() => { btn.textContent = '📋 テキストをコピーする'; }, 2000);
+  });
+}
+</script>
+</body>
+</html>
