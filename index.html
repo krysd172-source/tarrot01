@@ -4,6 +4,51 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>✨ タロット占い</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="タロット占い">
+<meta name="theme-color" content="#C8A8DC">
+<link id="apple-touch-icon" rel="apple-touch-icon" href="">
+<script>
+// Canvasでホーム画面アイコンを生成
+(function() {
+  const size = 180;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+
+  // 背景グラデーション（アプリのカード背面と同じ夢かわ系）
+  const grad = ctx.createLinearGradient(0, 0, size, size);
+  grad.addColorStop(0, '#C8A8DC');
+  grad.addColorStop(0.5, '#DCA8C8');
+  grad.addColorStop(1, '#A8C4DC');
+  ctx.fillStyle = grad;
+  // 角丸
+  const r = 40;
+  ctx.beginPath();
+  ctx.moveTo(r, 0);
+  ctx.lineTo(size - r, 0);
+  ctx.quadraticCurveTo(size, 0, size, r);
+  ctx.lineTo(size, size - r);
+  ctx.quadraticCurveTo(size, size, size - r, size);
+  ctx.lineTo(r, size);
+  ctx.quadraticCurveTo(0, size, 0, size - r);
+  ctx.lineTo(0, r);
+  ctx.quadraticCurveTo(0, 0, r, 0);
+  ctx.closePath();
+  ctx.fill();
+
+  // 絵文字（🔮）を中央に描画
+  ctx.font = '100px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🔮', size / 2, size / 2 + 4);
+
+  const dataUrl = canvas.toDataURL('image/png');
+  document.getElementById('apple-touch-icon').href = dataUrl;
+})();
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Shippori+Mincho:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -323,6 +368,56 @@
   }
   .result-card-emoji { font-size: 28px; }
 
+  /* AI reading box */
+  .ai-reading-box {
+    background: linear-gradient(135deg, #F5F0FC, #FCF0F6);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin: 20px 0 0;
+    border: 1.5px solid #E8D8F4;
+  }
+  .ai-reading-label {
+    font-size: 11px;
+    color: var(--text-light);
+    letter-spacing: 0.12em;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ai-reading-content {
+    font-size: 13px;
+    line-height: 2;
+    color: var(--text);
+    letter-spacing: 0.04em;
+    white-space: pre-wrap;
+    background: white;
+    border-radius: 10px;
+    padding: 14px;
+    border: 1px solid #ECD8F4;
+    min-height: 60px;
+  }
+  .ai-reading-loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-light);
+    font-size: 13px;
+    padding: 8px 0;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+  .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+
   /* AI text box */
   .ai-text-box {
     background: linear-gradient(135deg, #F5F0FC, #FCF0F6);
@@ -508,6 +603,18 @@
     <p id="resultQuestion" style="font-size:12px;color:var(--text-light);margin-top:4px;"></p>
   </div>
   <div id="resultCards"></div>
+
+  <div class="ai-reading-box">
+    <div class="ai-reading-label">🔮 AIによる鑑定結果</div>
+    <div class="ai-reading-content" id="aiReading">
+      <div class="ai-reading-loading" id="aiLoadingIndicator" style="display:none;">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <span>鑑定中です…</span>
+      </div>
+      <span id="aiReadingText" style="display:none;"></span>
+    </div>
+  </div>
+
   <div class="ai-text-box">
     <div class="ai-text-label">🤖 AIに読み込ませる用テキスト</div>
     <div class="ai-text-content" id="aiText"></div>
@@ -755,8 +862,68 @@ function showResult() {
   if(question) aiLines.push(`特に「${question}」という相談に沿った解釈をお願いします。`);
 
   document.getElementById('aiText').textContent = aiLines.join('\n');
+
+  // Reset AI reading area
+  document.getElementById('aiLoadingIndicator').style.display = 'flex';
+  document.getElementById('aiReadingText').style.display = 'none';
+  document.getElementById('aiReadingText').textContent = '';
+
   showScreen('resultScreen');
+
+  // Call Claude API
+  callClaudeReading(aiLines.join('\n'));
 }
+
+// ============================
+// CLAUDE API READING
+// ============================
+async function callClaudeReading(prompt) {
+  try {
+    const systemPrompt = `あなたはプロのタロット占い師です。
+依頼者から引いたカードの情報を受け取り、温かく・詩的な語り口で鑑定結果を伝えてください。
+以下のルールに従って回答してください：
+- 各カードの意味を位置ごとにやさしく解説する
+- 最後に全体的なメッセージ・アドバイスをまとめる
+- 文体はやわらかく、寄り添う言葉づかいで
+- 絵文字を適度に使って読みやすくする
+- 回答は日本語で`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+    const text = data.content?.[0]?.text ?? '鑑定結果を取得できませんでした。';
+
+    document.getElementById('aiLoadingIndicator').style.display = 'none';
+    const el = document.getElementById('aiReadingText');
+    el.style.display = 'block';
+    // Typewriter effect
+    let i = 0;
+    el.textContent = '';
+    function typeNext() {
+      if (i < text.length) {
+        el.textContent += text[i++];
+        setTimeout(typeNext, 18);
+      }
+    }
+    typeNext();
+
+  } catch (err) {
+    document.getElementById('aiLoadingIndicator').style.display = 'none';
+    const el = document.getElementById('aiReadingText');
+    el.style.display = 'block';
+    el.textContent = '⚠️ 鑑定中にエラーが発生しました。コピー用テキストをAIに貼り付けてご利用ください。';
+  }
+}
+
 
 function copyAiText() {
   const text = document.getElementById('aiText').textContent;
