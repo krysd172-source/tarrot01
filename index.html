@@ -10,74 +10,128 @@
 <meta name="theme-color" content="#C8A8DC">
 <link id="apple-touch-icon" rel="apple-touch-icon" href="">
 <script>
-// SVGイラスト（水晶玉）をアイコンとして設定
 (function() {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
-    <defs>
-      <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="#C8A8DC"/>
-        <stop offset="50%" stop-color="#DCA8C8"/>
-        <stop offset="100%" stop-color="#A8C4DC"/>
-      </linearGradient>
-      <radialGradient id="ball" cx="38%" cy="32%" r="60%">
-        <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
-        <stop offset="30%" stop-color="#E8D8F8" stop-opacity="0.85"/>
-        <stop offset="70%" stop-color="#B094C8" stop-opacity="0.9"/>
-        <stop offset="100%" stop-color="#6A4A8A" stop-opacity="1"/>
-      </radialGradient>
-      <radialGradient id="glow" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="#E0C8F0" stop-opacity="0.6"/>
-        <stop offset="100%" stop-color="#B094C8" stop-opacity="0"/>
-      </radialGradient>
-      <radialGradient id="base" cx="50%" cy="30%" r="60%">
-        <stop offset="0%" stop-color="#D4B8E8"/>
-        <stop offset="100%" stop-color="#8A6AAA"/>
-      </radialGradient>
-      <filter id="shadow">
-        <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#8A5AAA" flood-opacity="0.35"/>
-      </filter>
-    </defs>
+  const size = 180;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
 
-    <!-- 背景 -->
-    <rect width="180" height="180" rx="38" fill="url(#bg)"/>
+  // 背景グラデーション
+  const bg = ctx.createLinearGradient(0, 0, size, size);
+  bg.addColorStop(0,   '#C8A8DC');
+  bg.addColorStop(0.5, '#DCA8C8');
+  bg.addColorStop(1,   '#A8C4DC');
+  ctx.fillStyle = bg;
+  ctx.beginPath();
+  const r = 38;
+  ctx.moveTo(r,0); ctx.lineTo(size-r,0);
+  ctx.quadraticCurveTo(size,0,size,r);
+  ctx.lineTo(size,size-r);
+  ctx.quadraticCurveTo(size,size,size-r,size);
+  ctx.lineTo(r,size);
+  ctx.quadraticCurveTo(0,size,0,size-r);
+  ctx.lineTo(0,r);
+  ctx.quadraticCurveTo(0,0,r,0);
+  ctx.closePath();
+  ctx.fill();
 
-    <!-- 背景の星々 -->
-    <circle cx="28" cy="30" r="2" fill="white" opacity="0.6"/>
-    <circle cx="155" cy="25" r="1.5" fill="white" opacity="0.5"/>
-    <circle cx="22" cy="148" r="1.5" fill="white" opacity="0.4"/>
-    <circle cx="158" cy="140" r="2" fill="white" opacity="0.55"/>
-    <circle cx="45" cy="60" r="1" fill="white" opacity="0.4"/>
-    <circle cx="140" cy="55" r="1.5" fill="white" opacity="0.5"/>
-    <circle cx="130" cy="155" r="1" fill="white" opacity="0.4"/>
-    <circle cx="60" cy="155" r="1.5" fill="white" opacity="0.45"/>
+  // 背景の小さな星
+  [[28,30],[155,25],[22,148],[158,140],[45,62],[138,55],[128,155],[60,158]].forEach(([x,y])=>{
+    ctx.beginPath();
+    ctx.arc(x, y, 2, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.fill();
+  });
 
-    <!-- 台座 -->
-    <ellipse cx="90" cy="148" rx="32" ry="7" fill="#7A5A9A" opacity="0.4"/>
-    <rect x="70" y="132" width="40" height="14" rx="6" fill="url(#base)" filter="url(#shadow)"/>
-    <ellipse cx="90" cy="132" rx="20" ry="5" fill="#C4A0DC"/>
+  const cx = 90, cy = 86, ballR = 44;
 
-    <!-- 水晶玉のグロー -->
-    <circle cx="90" cy="95" r="52" fill="url(#glow)"/>
+  // 台座
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(cx, 148, 26, 6, 0, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(100,60,140,0.35)';
+  ctx.fill();
+  ctx.restore();
 
-    <!-- 水晶玉本体 -->
-    <circle cx="90" cy="90" r="46" fill="url(#ball)" filter="url(#shadow)"/>
+  ctx.save();
+  const baseGrad = ctx.createLinearGradient(cx-20, 132, cx+20, 148);
+  baseGrad.addColorStop(0, '#C4A0DC');
+  baseGrad.addColorStop(1, '#7A5A9A');
+  ctx.fillStyle = baseGrad;
+  ctx.beginPath();
+  ctx.roundRect(cx-20, 130, 40, 14, 6);
+  ctx.fill();
+  ctx.restore();
 
-    <!-- 内側の光の反射 -->
-    <ellipse cx="75" cy="72" rx="14" ry="10" fill="white" opacity="0.55" transform="rotate(-20 75 72)"/>
-    <ellipse cx="82" cy="66" rx="5" ry="3.5" fill="white" opacity="0.8" transform="rotate(-20 82 66)"/>
+  // 水晶玉のグロー
+  const glow = ctx.createRadialGradient(cx, cy, ballR*0.3, cx, cy, ballR*1.25);
+  glow.addColorStop(0, 'rgba(220,190,240,0.45)');
+  glow.addColorStop(1, 'rgba(180,140,210,0)');
+  ctx.beginPath();
+  ctx.arc(cx, cy, ballR*1.25, 0, Math.PI*2);
+  ctx.fillStyle = glow;
+  ctx.fill();
 
-    <!-- 水晶玉内の星 -->
-    <g opacity="0.7">
-      <polygon points="90,78 92,84 98,84 93,88 95,94 90,90 85,94 87,88 82,84 88,84"
-               fill="white" opacity="0.6"/>
-    </g>
+  // 水晶玉本体
+  const ball = ctx.createRadialGradient(cx-14, cy-16, 4, cx, cy, ballR);
+  ball.addColorStop(0,    'rgba(255,255,255,0.95)');
+  ball.addColorStop(0.25, 'rgba(232,216,252,0.88)');
+  ball.addColorStop(0.65, 'rgba(160,120,210,0.92)');
+  ball.addColorStop(1,    'rgba(90,55,130,1)');
+  ctx.beginPath();
+  ctx.arc(cx, cy, ballR, 0, Math.PI*2);
+  ctx.fillStyle = ball;
+  ctx.shadowColor = 'rgba(120,70,170,0.45)';
+  ctx.shadowBlur = 14;
+  ctx.shadowOffsetY = 5;
+  ctx.fill();
+  ctx.shadowColor = 'transparent';
 
-    <!-- 水晶玉の縁のハイライト -->
-    <circle cx="90" cy="90" r="46" fill="none" stroke="white" stroke-width="1.5" opacity="0.3"/>
-  </svg>`;
+  // 玉の縁ハイライト
+  ctx.beginPath();
+  ctx.arc(cx, cy, ballR, 0, Math.PI*2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.28)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
 
-  const encoded = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
-  document.getElementById('apple-touch-icon').href = encoded;
+  // 反射ハイライト（大）
+  ctx.save();
+  ctx.translate(cx-13, cy-18);
+  ctx.rotate(-0.35);
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 13, 9, 0, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(255,255,255,0.52)';
+  ctx.fill();
+  ctx.restore();
+
+  // 反射ハイライト（小）
+  ctx.save();
+  ctx.translate(cx-7, cy-26);
+  ctx.rotate(-0.35);
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 5, 3.5, 0, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(255,255,255,0.82)';
+  ctx.fill();
+  ctx.restore();
+
+  // 玉の中の星（手動描画）
+  ctx.save();
+  ctx.translate(cx+4, cy+4);
+  const starR1 = 10, starR2 = 4.5, points = 5;
+  ctx.beginPath();
+  for(let i=0; i<points*2; i++){
+    const angle = (i * Math.PI / points) - Math.PI/2;
+    const rad = i%2===0 ? starR1 : starR2;
+    const sx = Math.cos(angle)*rad, sy = Math.sin(angle)*rad;
+    i===0 ? ctx.moveTo(sx,sy) : ctx.lineTo(sx,sy);
+  }
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(255,240,255,0.65)';
+  ctx.fill();
+  ctx.restore();
+
+  document.getElementById('apple-touch-icon').href = canvas.toDataURL('image/png');
 })();
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Shippori+Mincho:wght@400;600&display=swap" rel="stylesheet">
