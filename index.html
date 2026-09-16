@@ -10,43 +10,74 @@
 <meta name="theme-color" content="#C8A8DC">
 <link id="apple-touch-icon" rel="apple-touch-icon" href="">
 <script>
-// Canvasでホーム画面アイコンを生成
+// SVGイラスト（水晶玉）をアイコンとして設定
 (function() {
-  const size = 180;
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+    <defs>
+      <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#C8A8DC"/>
+        <stop offset="50%" stop-color="#DCA8C8"/>
+        <stop offset="100%" stop-color="#A8C4DC"/>
+      </linearGradient>
+      <radialGradient id="ball" cx="38%" cy="32%" r="60%">
+        <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+        <stop offset="30%" stop-color="#E8D8F8" stop-opacity="0.85"/>
+        <stop offset="70%" stop-color="#B094C8" stop-opacity="0.9"/>
+        <stop offset="100%" stop-color="#6A4A8A" stop-opacity="1"/>
+      </radialGradient>
+      <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#E0C8F0" stop-opacity="0.6"/>
+        <stop offset="100%" stop-color="#B094C8" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="base" cx="50%" cy="30%" r="60%">
+        <stop offset="0%" stop-color="#D4B8E8"/>
+        <stop offset="100%" stop-color="#8A6AAA"/>
+      </radialGradient>
+      <filter id="shadow">
+        <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#8A5AAA" flood-opacity="0.35"/>
+      </filter>
+    </defs>
 
-  // 背景グラデーション（アプリのカード背面と同じ夢かわ系）
-  const grad = ctx.createLinearGradient(0, 0, size, size);
-  grad.addColorStop(0, '#C8A8DC');
-  grad.addColorStop(0.5, '#DCA8C8');
-  grad.addColorStop(1, '#A8C4DC');
-  ctx.fillStyle = grad;
-  // 角丸
-  const r = 40;
-  ctx.beginPath();
-  ctx.moveTo(r, 0);
-  ctx.lineTo(size - r, 0);
-  ctx.quadraticCurveTo(size, 0, size, r);
-  ctx.lineTo(size, size - r);
-  ctx.quadraticCurveTo(size, size, size - r, size);
-  ctx.lineTo(r, size);
-  ctx.quadraticCurveTo(0, size, 0, size - r);
-  ctx.lineTo(0, r);
-  ctx.quadraticCurveTo(0, 0, r, 0);
-  ctx.closePath();
-  ctx.fill();
+    <!-- 背景 -->
+    <rect width="180" height="180" rx="38" fill="url(#bg)"/>
 
-  // 絵文字（🔮）を中央に描画
-  ctx.font = '100px serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('🔮', size / 2, size / 2 + 4);
+    <!-- 背景の星々 -->
+    <circle cx="28" cy="30" r="2" fill="white" opacity="0.6"/>
+    <circle cx="155" cy="25" r="1.5" fill="white" opacity="0.5"/>
+    <circle cx="22" cy="148" r="1.5" fill="white" opacity="0.4"/>
+    <circle cx="158" cy="140" r="2" fill="white" opacity="0.55"/>
+    <circle cx="45" cy="60" r="1" fill="white" opacity="0.4"/>
+    <circle cx="140" cy="55" r="1.5" fill="white" opacity="0.5"/>
+    <circle cx="130" cy="155" r="1" fill="white" opacity="0.4"/>
+    <circle cx="60" cy="155" r="1.5" fill="white" opacity="0.45"/>
 
-  const dataUrl = canvas.toDataURL('image/png');
-  document.getElementById('apple-touch-icon').href = dataUrl;
+    <!-- 台座 -->
+    <ellipse cx="90" cy="148" rx="32" ry="7" fill="#7A5A9A" opacity="0.4"/>
+    <rect x="70" y="132" width="40" height="14" rx="6" fill="url(#base)" filter="url(#shadow)"/>
+    <ellipse cx="90" cy="132" rx="20" ry="5" fill="#C4A0DC"/>
+
+    <!-- 水晶玉のグロー -->
+    <circle cx="90" cy="95" r="52" fill="url(#glow)"/>
+
+    <!-- 水晶玉本体 -->
+    <circle cx="90" cy="90" r="46" fill="url(#ball)" filter="url(#shadow)"/>
+
+    <!-- 内側の光の反射 -->
+    <ellipse cx="75" cy="72" rx="14" ry="10" fill="white" opacity="0.55" transform="rotate(-20 75 72)"/>
+    <ellipse cx="82" cy="66" rx="5" ry="3.5" fill="white" opacity="0.8" transform="rotate(-20 82 66)"/>
+
+    <!-- 水晶玉内の星 -->
+    <g opacity="0.7">
+      <polygon points="90,78 92,84 98,84 93,88 95,94 90,90 85,94 87,88 82,84 88,84"
+               fill="white" opacity="0.6"/>
+    </g>
+
+    <!-- 水晶玉の縁のハイライト -->
+    <circle cx="90" cy="90" r="46" fill="none" stroke="white" stroke-width="1.5" opacity="0.3"/>
+  </svg>`;
+
+  const encoded = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+  document.getElementById('apple-touch-icon').href = encoded;
 })();
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Shippori+Mincho:wght@400;600&display=swap" rel="stylesheet">
