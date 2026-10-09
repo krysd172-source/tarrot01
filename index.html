@@ -277,6 +277,34 @@
     max-width: 480px;
     margin: 0 auto 4px;
   }
+  .preset-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .preset-btn {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 10px;
+    background: linear-gradient(135deg, #EDE4F8, #F8E4F0);
+    border: 1.5px solid #DDD0EC;
+    border-radius: 20px;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 11px;
+    color: var(--text);
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    line-height: 1.4;
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .preset-btn:active, .preset-btn.selected {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+    border-color: transparent;
+  }
+
   .question-label {
     font-size: 12px;
     color: var(--text-light);
@@ -452,56 +480,17 @@
     color: var(--text);
   }
   .result-card-emoji { font-size: 28px; }
-
-  /* AI reading box */
-  .ai-reading-box {
-    background: linear-gradient(135deg, #F5F0FC, #FCF0F6);
-    border-radius: var(--radius);
-    padding: 18px;
-    margin: 20px 0 0;
-    border: 1.5px solid #E8D8F4;
+  .result-card-img {
+    width: 56px;
+    height: auto;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(160,120,200,0.25);
+    flex-shrink: 0;
+    object-fit: cover;
   }
-  .ai-reading-label {
-    font-size: 11px;
-    color: var(--text-light);
-    letter-spacing: 0.12em;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+  .result-card-img.reversed {
+    transform: rotate(180deg);
   }
-  .ai-reading-content {
-    font-size: 13px;
-    line-height: 2;
-    color: var(--text);
-    letter-spacing: 0.04em;
-    white-space: pre-wrap;
-    background: white;
-    border-radius: 10px;
-    padding: 14px;
-    border: 1px solid #ECD8F4;
-    min-height: 60px;
-  }
-  .ai-reading-loading {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: var(--text-light);
-    font-size: 13px;
-    padding: 8px 0;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 0.4; }
-    50% { opacity: 1; }
-  }
-  .dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--accent);
-    animation: pulse 1.2s ease-in-out infinite;
-  }
-  .dot:nth-child(2) { animation-delay: 0.2s; }
-  .dot:nth-child(3) { animation-delay: 0.4s; }
 
   /* AI text box */
   .ai-text-box {
@@ -630,7 +619,11 @@
 <!-- SELECT SCREEN -->
 <div id="selectScreen" class="screen active">
   <div class="question-area">
-    <label class="question-label">✦ 相談したいことを書いてください（任意）</label>
+    <label class="question-label">✦ 相談したいことを選ぶか、自由に書いてください（任意）</label>
+    <div class="preset-row">
+      <button class="preset-btn" onclick="setPreset('今日はどんな一日になるでしょうか？')">今日はどんな一日になるでしょうか？</button>
+      <button class="preset-btn" onclick="setPreset('明日はどんな一日になるでしょうか？')">明日はどんな一日になるでしょうか？</button>
+    </div>
     <textarea class="question-input" id="questionInput" rows="2" placeholder="例：仕事のことで迷っています…"></textarea>
   </div>
 
@@ -689,17 +682,6 @@
   </div>
   <div id="resultCards"></div>
 
-  <div class="ai-reading-box">
-    <div class="ai-reading-label">🔮 AIによる鑑定結果</div>
-    <div class="ai-reading-content" id="aiReading">
-      <div class="ai-reading-loading" id="aiLoadingIndicator" style="display:none;">
-        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-        <span>鑑定中です…</span>
-      </div>
-      <span id="aiReadingText" style="display:none;"></span>
-    </div>
-  </div>
-
   <div class="ai-text-box">
     <div class="ai-text-label">🤖 AIに読み込ませる用テキスト</div>
     <div class="ai-text-content" id="aiText"></div>
@@ -730,6 +712,57 @@ const SUITS = [
   {name:"ペンタクル", emoji:"🌟"}
 ];
 const NUMBERS = ["エース","2","3","4","5","6","7","8","9","10","ペイジ","ナイト","クイーン","キング"];
+
+// ============================
+// CARD IMAGE URLs (Wikimedia Commons / Rider-Waite パブリックドメイン)
+// ============================
+// 大アルカナ: Wikimedia Commons の正確なパス
+const MAJOR_IMG = {
+  '愚者':       '9/90/RWS_Tarot_00_Fool.jpg',
+  '魔術師':     '1/10/RWS_Tarot_01_Magician.jpg',
+  '女教皇':     '8/88/RWS_Tarot_02_High_Priestess.jpg',
+  '女帝':       'd/d2/RWS_Tarot_03_Empress.jpg',
+  '皇帝':       'c/c3/RWS_Tarot_04_Emperor.jpg',
+  '法王':       '8/8d/RWS_Tarot_05_Hierophant.jpg',
+  '恋人':       'b/ba/RWS_Tarot_06_Lovers.jpg',
+  '戦車':       '9/9b/RWS_Tarot_07_Chariot.jpg',
+  '力':         'f/f5/RWS_Tarot_08_Strength.jpg',
+  '隠者':       '4/4d/RWS_Tarot_09_Hermit.jpg',
+  '運命の輪':   '3/3c/RWS_Tarot_10_Wheel_of_Fortune.jpg',
+  '正義':       'e/e0/RWS_Tarot_11_Justice.jpg',
+  '吊られた男': '2/2b/RWS_Tarot_12_Hanged_Man.jpg',
+  '死神':       'd/d7/RWS_Tarot_13_Death.jpg',
+  '節制':       'f/f8/RWS_Tarot_14_Temperance.jpg',
+  '悪魔':       '5/55/RWS_Tarot_15_Devil.jpg',
+  '塔':         '5/53/RWS_Tarot_16_Tower.jpg',
+  '星':         'd/db/RWS_Tarot_17_Star.jpg',
+  '月':         '7/7f/RWS_Tarot_18_Moon.jpg',
+  '太陽':       '1/17/RWS_Tarot_19_Sun.jpg',
+  '審判':       'd/dd/RWS_Tarot_20_Judgement.jpg',
+  '世界':       'f/ff/RWS_Tarot_21_World.jpg',
+};
+
+// 小アルカナ: ファイル名パターン Wands01.jpg / Cups04.jpg 等
+const SUIT_EN = { 'ワンド':'Wands', 'カップ':'Cups', 'ソード':'Swords', 'ペンタクル':'Pents' };
+const NUM_EN  = {
+  'エース':'01','2':'02','3':'03','4':'04','5':'05','6':'06',
+  '7':'07','8':'08','9':'09','10':'10',
+  'ペイジ':'11','ナイト':'12','クイーン':'13','キング':'14'
+};
+
+function getCardImageUrl(card) {
+  const base = 'https://upload.wikimedia.org/wikipedia/commons/';
+  if (card.type === 'major') {
+    const path = MAJOR_IMG[card.name.trim()];
+    return path ? base + path : null;
+  } else {
+    const suit = SUIT_EN[card.suit];
+    const num  = NUM_EN[card.name.split(' ')[1]];
+    if (!suit || !num) return null;
+    // Commons直リンク（ファイル名が判明しているパターン）
+    return `https://upload.wikimedia.org/wikipedia/commons/${suit}${num}.jpg`;
+  }
+}
 
 // Generate full 78-card deck
 function buildDeck() {
@@ -821,8 +854,30 @@ function resetApp() {
   drawnCards = [];
   flippedCount = 0;
   document.getElementById('questionInput').value = '';
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('selected'));
   showScreen('selectScreen');
 }
+
+function setPreset(text) {
+  const input = document.getElementById('questionInput');
+  // 同じボタンをもう一度タップしたら解除
+  if(input.value === text) {
+    input.value = '';
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('selected'));
+  } else {
+    input.value = text;
+    document.querySelectorAll('.preset-btn').forEach(b => {
+      b.classList.toggle('selected', b.textContent === text);
+    });
+  }
+}
+
+// 手入力したらプリセット選択を解除
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('questionInput').addEventListener('input', () => {
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('selected'));
+  });
+});
 
 // ============================
 // SELECT SPREAD
@@ -915,13 +970,14 @@ function showResult() {
 
   drawnCards.forEach((card, i) => {
     const pos = spread.positions[i];
+    const imgUrl = getCardImageUrl(card);
     const div = document.createElement('div');
     div.className = 'result-card fade-in';
     div.style.borderLeftColor = colors[i % colors.length];
     div.style.animationDelay = (i * 0.1) + 's';
     div.innerHTML = `
       <div class="result-card-header">
-        <div class="result-card-emoji">${card.emoji}</div>
+        ${imgUrl ? `<img src="${imgUrl}" class="result-card-img${card.reversed ? ' reversed' : ''}" alt="${card.name}" onerror="this.style.display='none'">` : `<div class="result-card-emoji">${card.emoji}</div>`}
         <div>
           <div class="result-position">${pos}</div>
           <div class="result-card-name">${card.emoji} ${card.name} ${card.reversed ? '🔄逆位置' : '✅正位置'}</div>
@@ -940,73 +996,17 @@ function showResult() {
   aiLines.push('引いたカード：');
   drawnCards.forEach((card, i) => {
     const pos = spread.positions[i];
+    const imgUrl = getCardImageUrl(card);
     aiLines.push(`・${pos}：${card.emoji} ${card.name}（${card.reversed ? '逆位置' : '正位置'}）`);
+    if(imgUrl) aiLines.push(`  カード画像：${imgUrl}`);
   });
   aiLines.push('');
   aiLines.push('以上のカードをもとに、それぞれのカードの意味と全体的なメッセージを読み解いてください。');
+  aiLines.push('※ 各カードの画像URLも記載しています。画像を参照しながら、絵柄に描かれているシンボルや情景も踏まえて解釈してください。');
   if(question) aiLines.push(`特に「${question}」という相談に沿った解釈をお願いします。`);
 
   document.getElementById('aiText').textContent = aiLines.join('\n');
-
-  // Reset AI reading area
-  document.getElementById('aiLoadingIndicator').style.display = 'flex';
-  document.getElementById('aiReadingText').style.display = 'none';
-  document.getElementById('aiReadingText').textContent = '';
-
   showScreen('resultScreen');
-
-  // Call Claude API
-  callClaudeReading(aiLines.join('\n'));
-}
-
-// ============================
-// CLAUDE API READING
-// ============================
-async function callClaudeReading(prompt) {
-  try {
-    const systemPrompt = `あなたはプロのタロット占い師です。
-依頼者から引いたカードの情報を受け取り、温かく・詩的な語り口で鑑定結果を伝えてください。
-以下のルールに従って回答してください：
-- 各カードの意味を位置ごとにやさしく解説する
-- 最後に全体的なメッセージ・アドバイスをまとめる
-- 文体はやわらかく、寄り添う言葉づかいで
-- 絵文字を適度に使って読みやすくする
-- 回答は日本語で`;
-
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-
-    const data = await response.json();
-    const text = data.content?.[0]?.text ?? '鑑定結果を取得できませんでした。';
-
-    document.getElementById('aiLoadingIndicator').style.display = 'none';
-    const el = document.getElementById('aiReadingText');
-    el.style.display = 'block';
-    // Typewriter effect
-    let i = 0;
-    el.textContent = '';
-    function typeNext() {
-      if (i < text.length) {
-        el.textContent += text[i++];
-        setTimeout(typeNext, 18);
-      }
-    }
-    typeNext();
-
-  } catch (err) {
-    document.getElementById('aiLoadingIndicator').style.display = 'none';
-    const el = document.getElementById('aiReadingText');
-    el.style.display = 'block';
-    el.textContent = '⚠️ 鑑定中にエラーが発生しました。コピー用テキストをAIに貼り付けてご利用ください。';
-  }
 }
 
 
