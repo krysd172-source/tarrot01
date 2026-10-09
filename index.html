@@ -714,53 +714,38 @@ const SUITS = [
 const NUMBERS = ["エース","2","3","4","5","6","7","8","9","10","ペイジ","ナイト","クイーン","キング"];
 
 // ============================
-// CARD IMAGE URLs (Wikimedia Commons / Rider-Waite パブリックドメイン)
+// CARD IMAGE URLs
+// CDN: cdn.jsdelivr.net/gh/reginanka/tarot-cards@main/cards/
+// ライダーウェイト版 78枚 CC BY 4.0
 // ============================
-// 大アルカナ: Wikimedia Commons の正確なパス
-const MAJOR_IMG = {
-  '愚者':       '9/90/RWS_Tarot_00_Fool.jpg',
-  '魔術師':     '1/10/RWS_Tarot_01_Magician.jpg',
-  '女教皇':     '8/88/RWS_Tarot_02_High_Priestess.jpg',
-  '女帝':       'd/d2/RWS_Tarot_03_Empress.jpg',
-  '皇帝':       'c/c3/RWS_Tarot_04_Emperor.jpg',
-  '法王':       '8/8d/RWS_Tarot_05_Hierophant.jpg',
-  '恋人':       'b/ba/RWS_Tarot_06_Lovers.jpg',
-  '戦車':       '9/9b/RWS_Tarot_07_Chariot.jpg',
-  '力':         'f/f5/RWS_Tarot_08_Strength.jpg',
-  '隠者':       '4/4d/RWS_Tarot_09_Hermit.jpg',
-  '運命の輪':   '3/3c/RWS_Tarot_10_Wheel_of_Fortune.jpg',
-  '正義':       'e/e0/RWS_Tarot_11_Justice.jpg',
-  '吊られた男': '2/2b/RWS_Tarot_12_Hanged_Man.jpg',
-  '死神':       'd/d7/RWS_Tarot_13_Death.jpg',
-  '節制':       'f/f8/RWS_Tarot_14_Temperance.jpg',
-  '悪魔':       '5/55/RWS_Tarot_15_Devil.jpg',
-  '塔':         '5/53/RWS_Tarot_16_Tower.jpg',
-  '星':         'd/db/RWS_Tarot_17_Star.jpg',
-  '月':         '7/7f/RWS_Tarot_18_Moon.jpg',
-  '太陽':       '1/17/RWS_Tarot_19_Sun.jpg',
-  '審判':       'd/dd/RWS_Tarot_20_Judgement.jpg',
-  '世界':       'f/ff/RWS_Tarot_21_World.jpg',
-};
+const CDN = 'https://cdn.jsdelivr.net/gh/reginanka/tarot-cards@main/cards/';
 
-// 小アルカナ: ファイル名パターン Wands01.jpg / Cups04.jpg 等
-const SUIT_EN = { 'ワンド':'Wands', 'カップ':'Cups', 'ソード':'Swords', 'ペンタクル':'Pents' };
-const NUM_EN  = {
+// 大アルカナ: m00〜m21
+const MAJOR_IDX = [
+  '愚者','魔術師','女教皇','女帝','皇帝','法王','恋人','戦車',
+  '力','隠者','運命の輪','正義','吊られた男','死神','節制',
+  '悪魔','塔','星','月','太陽','審判','世界'
+];
+
+// 小アルカナ スーツコード
+const SUIT_CODE = { 'ワンド':'w', 'カップ':'c', 'ソード':'s', 'ペンタクル':'p' };
+const NUM_CODE  = {
   'エース':'01','2':'02','3':'03','4':'04','5':'05','6':'06',
   '7':'07','8':'08','9':'09','10':'10',
   'ペイジ':'11','ナイト':'12','クイーン':'13','キング':'14'
 };
 
 function getCardImageUrl(card) {
-  const base = 'https://upload.wikimedia.org/wikipedia/commons/';
   if (card.type === 'major') {
-    const path = MAJOR_IMG[card.name.trim()];
-    return path ? base + path : null;
+    const idx = MAJOR_IDX.indexOf(card.name.trim());
+    if (idx < 0) return null;
+    const code = String(idx).padStart(2, '0');
+    return `${CDN}m${code}.webp`;
   } else {
-    const suit = SUIT_EN[card.suit];
-    const num  = NUM_EN[card.name.split(' ')[1]];
+    const suit = SUIT_CODE[card.suit];
+    const num  = NUM_CODE[card.name.split(' ')[1]];
     if (!suit || !num) return null;
-    // Commons直リンク（ファイル名が判明しているパターン）
-    return `https://upload.wikimedia.org/wikipedia/commons/${suit}${num}.jpg`;
+    return `${CDN}${suit}${num}.webp`;
   }
 }
 
